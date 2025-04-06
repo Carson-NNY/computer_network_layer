@@ -175,11 +175,13 @@ def parse_msg(raw_msg):
         dv[dst] = int(cost.strip())
     return neighbor_id, dv
 
-def update_dv_table(dv_table, neighbor_dv, neighbor_id):
+def update_dv_table(node_id, dv_table, neighbor_dv, neighbor_id):
     """
     Update the distance vector table based on the received message.
 
     Parameters:
+        node_id : str
+            The unique identifier for this node.
         dv_table : dict
             The distance vector table.
         dv : dict
@@ -196,6 +198,9 @@ def update_dv_table(dv_table, neighbor_dv, neighbor_id):
     # first get the direct cost to the neighbor which just sent us the message
     direct_cost_to_neighbor = dv_table[neighbor_id][neighbor_id]
     for dst, cost in neighbor_dv.items():
+        if dst == node_id:
+            continue
+
         if dst not in dv_table:
             dv_table[dst] = {}
 
@@ -226,25 +231,29 @@ def listen_podcast(net_interface, node_id, dv_table):
     """
     Listen for incoming messages from the network. This is a blocking call.
     """
-    net_interface.sock.settimeout(5)  # if no message is received in 5 seconds, we found the shortest path, exit the loop
+    net_interface.sock.settimeout(3)  # if no message is received in 5 seconds, we found the shortest path, exit the loop
     while True:
         try:
-            raw_msg = receive_message(net_interface)
-            if raw_msg is None:
+            # raw_msg = receive_message(net_interface)
+            buffer = net_interface.recv(4096).decode()
+            if not buffer:
                 break
-            # Parse the received message
-            neighbor_id, neighbor_dv = parse_msg(raw_msg)
-            print(f"Received distance vector from neighbor {neighbor_id}: {neighbor_dv}")
-            # Update the distance vector table and vector based on the received message
-            need_update = update_dv_table(dv_table, neighbor_dv, neighbor_id)
-            if need_update:
-                print(f"Updating distance vector table with neighbor {neighbor_id}")
-                # Update the distance vector
-                dv = get_dv(node_id, dv_table)
-                msg = serialize_dv_msg2(dv, node_id)
-                print(f"??????========DV update ready to be sent to neighbors: {msg}")
-                net_interface.send(msg.encode())
-                log_updates(dv, node_id)  # log the updates
+            # Split the buffer into messages
+            while "&" in buffer:
+                raw_msg, buffer = buffer.split("&", 1)
+                # Parse the received message
+                neighbor_id, neighbor_dv = parse_msg(raw_msg)
+                print(f"Received distance vector from neighbor {neighbor_id}: {neighbor_dv}")
+                # Update the distance vector table and vector based on the received message
+                need_update = update_dv_table(node_id, dv_table, neighbor_dv, neighbor_id)
+                if need_update:
+                    # Update the distance vector
+                    dv = get_dv(node_id, dv_table)
+                    msg = serialize_dv_msg2(dv, node_id)
+                    print(f"??????========DV update ready to be sent to neighbors: {msg}")
+                    net_interface.send(msg.encode())
+                    log_updates(dv, node_id)  # log the updates
+
         except socket.timeout:
             print("No updates in 5 seconds, found the shortest path and exiting.")
             break
@@ -288,7 +297,7 @@ if __name__ == '__main__':
     dv= get_dv(node_id, dv_table) # get the distance vector message
     log_updates(dv, node_id) # log the updates
 
-    msg = serialize_dv_msg(dv, node_id) # serialize the distance vector message
+    msg = serialize_dv_msg2(dv, node_id) # serialize the distance vector message
     print( "DV ready to be sent to neighbors: ", msg)
 
 
@@ -297,33 +306,8 @@ if __name__ == '__main__':
 
     # Listen for incoming messages from the network
     listen_podcast(net_interface, node_id, dv_table)
-
     # Found the shortest path, exit the loop
 
 
-    """Below is an example of how to use the network interface and log. Replace it with your distance vector routing protocol"""
-
-    # Create a log file
-    # log_file = open("log.txt", "w")
-
-    # Example of sending a message to the network, 
-    # which is guaranteed to be broadcast to your neighbors
-    # net_interface.send(b"Hello neighbor")
-        
-    # Example of receiving a message from the network,
-    # which is guaranteed to be from a neighbor
-    # msg = net_interface.recv(1024)
-    # receive the message from the network. Note: May return content from multiple nodes.
-
-    # Write the message to the log file. Use flush to ensure the message is written to the file immediately
-    # log_file.write(msg.decode())
-    # log_file.flush() # IMPORTANT
- 
-    # Wait for 5 seconds before closing the interface
-    time.sleep(5)
-
     # Close the interface with the network
     net_interface.close()
-
-    # Close the log file
-    # log_file.close()

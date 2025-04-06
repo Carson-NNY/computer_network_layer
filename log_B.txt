@@ -1,2 +1,10 @@
-A:5:A C:1:C
-A:5:A C:1:C
+A:2:A C:3:C D:1:D
+A:2:A C:3:C D:1:D
+A:2:A C:3:C D:1:D E:8:C
+A:2:A C:3:C D:1:D E:5:D
+A:2:A C:3:C D:1:D E:5:D
+A:2:A C:3:C D:1:D E:5:D
+A:2:A C:3:C D:1:D E:5:D
+A:2:A C:3:C D:1:D E:5:D
+A:2:A C:3:C D:1:D E:5:D
+A:2:A C:3:C D:1:D E:5:D

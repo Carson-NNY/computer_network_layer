@@ -1,2 +1,15 @@
-B:1:B D:1:D
-B:1:B D:1:D
+A:6:A B:3:B D:2:D E:5:E
+A:6:A B:3:B D:2:D E:5:E
+A:5:B B:3:B D:2:D E:5:E
+A:5:B B:3:B D:2:D E:5:E
+A:5:B B:3:B D:2:D E:5:E
+A:5:B B:3:B D:2:D E:5:E
+A:5:B B:3:B D:2:D E:5:E
+A:5:B B:3:B D:2:D E:5:E
+A:5:B B:3:B D:2:D E:5:E
+A:5:B B:3:B D:2:D E:5:E
+A:5:B B:3:B D:2:D E:5:E
+A:5:B B:3:B D:2:D E:5:E
+A:5:B B:3:B D:2:D E:5:E
+A:5:B B:3:B D:2:D E:5:E
+A:5:B B:3:B D:2:D E:5:E
