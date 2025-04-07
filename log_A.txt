@@ -1,5 +1,6 @@
-B:2:B C:6:C
-B:2:B C:5:B D:3:B
-B:2:B C:5:B D:3:B E:11:C
-B:2:B C:5:B D:3:B E:10:B
-B:2:B C:5:B D:3:B E:7:B
+B:2:B C:2:C
+B:2:B C:2:C
+B:2:B C:2:C
+B:2:B C:2:C
+B:2:B C:2:C
+B:2:B C:2:C

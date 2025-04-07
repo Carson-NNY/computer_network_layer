@@ -106,6 +106,8 @@ def initialize_dv_table (init_costs):
     dv_table = {}
     node_id, neighbors = init_costs.split('. ')
 
+    dv_table[node_id] = {node_id: 0}
+
     neighbors_pair = neighbors.strip().split(',')
     for each in neighbors_pair:
         neighbor, cost = each.split(':')
@@ -198,9 +200,6 @@ def update_dv_table(node_id, dv_table, neighbor_dv, neighbor_id):
     # first get the direct cost to the neighbor which just sent us the message
     direct_cost_to_neighbor = dv_table[neighbor_id][neighbor_id]
     for dst, cost in neighbor_dv.items():
-        if dst == node_id:
-            continue
-
         if dst not in dv_table:
             dv_table[dst] = {}
 
@@ -213,6 +212,7 @@ def update_dv_table(node_id, dv_table, neighbor_dv, neighbor_id):
             updated = True
 
     return updated
+
 
 def receive_message(net_interface):
     header = net_interface.recv(4)
@@ -270,6 +270,8 @@ def log_updates(dv, node_id):
     """
     log_content = ""
     for dst, (min_cost, next_hop) in dv.items():
+        if dst == node_id:
+            continue
         log_content += f"{dst}:{min_cost}:{next_hop} "
     log_content = log_content[:-1]
 
@@ -306,8 +308,13 @@ if __name__ == '__main__':
 
     # Listen for incoming messages from the network
     listen_podcast(net_interface, node_id, dv_table)
+    final_dv = get_dv(node_id, dv_table)
+    log_updates(final_dv, node_id)
+
     # Found the shortest path, exit the loop
 
+    # sleep for a while to allow the last message to be sent
+    time.sleep(1)
 
     # Close the interface with the network
     net_interface.close()
