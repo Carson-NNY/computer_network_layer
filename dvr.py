@@ -1,6 +1,6 @@
 """"
-Columbia University - CSEE 4119 Computer Network
-Assignment 3 - Distance Vector Routing
+Computer Network
+Distance Vector Routing
 
 dvr.py - the Distance Vector Routing (DVR) program announces its distance vector to its neighbors and 
 updates its routing table based on the received routing vectors from its neighbors
@@ -91,12 +91,6 @@ def initialize_dv_table (init_costs):
 
     The 2D table (dv_table) is a dict-of-dicts:
        dv_table[destination][via] = cost
-    It initially includes:
-       - A: {A: 0}  (optional, but useful for internal computation)
-       - For each direct neighbor X: { X: cost_direct }
-
-    The 1D DV vector (dv) takes the minimum cost for each destination:
-       dv[destination] = (min_cost, next_hop)
 
     Returns:
        (node_id, dv_table) tuple.
@@ -155,6 +149,20 @@ def serialize_dv_msg(dv, node_id):
 
 
 def serialize_dv_msg2(dv, node_id):
+    """
+    Given a distance vector, serialize it into a string format:
+       "<node_id>. <destination_1>:<cost_1>,<destination_2>:<cost_2>,..."
+
+    Parameters:
+        dv : dict
+            The distance vector.
+        node_id : str
+            The unique identifier for this node.
+
+    Returns:
+        str
+            The serialized distance vector message.
+    """
     msg = f"{node_id}. "
     for dst, (min_cost, next_hop) in dv.items():
         msg += f"{dst}:{min_cost},"
@@ -215,6 +223,18 @@ def update_dv_table(node_id, dv_table, neighbor_dv, neighbor_id):
 
 
 def receive_message(net_interface):
+    """
+    The function first reads a 4-byte header indicating the length of the upcoming message,
+    then reads the full message based on that length. It returns the decoded message string.
+
+    Parameters:
+        net_interface : NetworkInterface
+            The network interface used to receive the message.
+
+    Returns:
+        str or None:
+            The decoded message string if successful, or None if the connection is closed.
+    """
     header = net_interface.recv(4)
     if not header:
         return None  # connection closed
@@ -229,9 +249,21 @@ def receive_message(net_interface):
 
 def listen_podcast(net_interface, node_id, dv_table):
     """
-    Listen for incoming messages from the network. This is a blocking call.
+    Listens for incoming distance vector messages from neighbors.
+
+    Parses messages delimited by '&', updates the DV table if shorter paths are found,
+    and broadcasts updated vectors. Terminates after 10 seconds of no updates,
+    assuming network convergence.
+
+    Parameters:
+        net_interface : NetworkInterface
+            Interface for network communication.
+        node_id : str
+            ID of the current node.
+        dv_table : dict
+            Distance vector table to update.
     """
-    net_interface.sock.settimeout(3)  # if no message is received in 5 seconds, we found the shortest path, exit the loop
+    net_interface.sock.settimeout(10)  # if no message is received in 10 seconds(safe threadshould for 10 nodes), we found the shortest path, exit the loop
     while True:
         try:
             # raw_msg = receive_message(net_interface)
@@ -250,7 +282,7 @@ def listen_podcast(net_interface, node_id, dv_table):
                     # Update the distance vector
                     dv = get_dv(node_id, dv_table)
                     msg = serialize_dv_msg2(dv, node_id)
-                    print(f"??????========DV update ready to be sent to neighbors: {msg}")
+                    print(f"========DV update ready to be sent to neighbors: {msg}")
                     net_interface.send(msg.encode())
                     log_updates(dv, node_id)  # log the updates
 
